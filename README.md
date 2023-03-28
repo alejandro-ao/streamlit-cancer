@@ -1,4 +1,4 @@
-# Cell Image Analyzer
+# Breast cancer diagnosis predictor
 
 ## Overview
 
