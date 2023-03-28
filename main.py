@@ -1,7 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def clean_data(df):
+
+def get_clean_data():
+    df = pd.read_csv('./data/cancer-diagnosis.csv')
     df = df.drop(['Unnamed: 32', 'id'], axis=1)
     df['diagnosis'] = df['diagnosis'].map({'M': 1, 'B': 0})
     return df
@@ -19,8 +21,7 @@ def get_model():
     from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import accuracy_score, classification_report
 
-    df = pd.read_csv('./data/cancer-diagnosis.csv')
-    df = clean_data(df)
+    df = get_clean_data()
 
     # scale predictors and split data
     X = df.drop(['diagnosis'], axis=1)
@@ -42,12 +43,7 @@ def get_model():
     return model
 
 
-def create_radar_chart(radius_mean, texture_mean, perimeter_mean, area_mean, smoothness_mean, compactness_mean,
-                       concavity_mean, concave_points_mean, symmetry_mean, fractal_dimension_mean,
-                       radius_se, texture_se, perimeter_se, area_se, smoothness_se, compactness_se, concavity_se,
-                       concave_points_se, symmetry_se, fractal_dimension_se,
-                       radius_worst, texture_worst, perimeter_worst, area_worst, smoothness_worst, compactness_worst,
-                       concavity_worst, concave_points_worst, symmetry_worst, fractal_dimension_worst):
+def create_radar_chart(input_data):
 
     import plotly.graph_objects as go
 
@@ -55,8 +51,10 @@ def create_radar_chart(radius_mean, texture_mean, perimeter_mean, area_mean, smo
 
     fig.add_trace(
         go.Scatterpolar(
-            r=[radius_mean, texture_mean, perimeter_mean, area_mean, smoothness_mean, compactness_mean, concavity_mean,
-               concave_points_mean, symmetry_mean, fractal_dimension_mean],
+            r=[input_data['radius_mean'], input_data['texture_mean'], input_data['perimeter_mean'],
+                input_data['area_mean'], input_data['smoothness_mean'], input_data['compactness_mean'],
+                input_data['concavity_mean'], input_data['concave points_mean'], input_data['symmetry_mean'],
+                input_data['fractal_dimension_mean']],
             theta=['Radius', 'Texture', 'Perimeter', 'Area', 'Smoothness', 'Compactness', 'Concavity', 'Concave Points',
                    'Symmetry', 'Fractal Dimension'],
             fill='toself',
@@ -66,8 +64,9 @@ def create_radar_chart(radius_mean, texture_mean, perimeter_mean, area_mean, smo
 
     fig.add_trace(
         go.Scatterpolar(
-            r=[radius_se, texture_se, perimeter_se, area_se, smoothness_se, compactness_se, concavity_se,
-               concave_points_se, symmetry_se, fractal_dimension_se],
+            r=[input_data['radius_se'], input_data['texture_se'], input_data['perimeter_se'], input_data['area_se'],
+                input_data['smoothness_se'], input_data['compactness_se'], input_data['concavity_se'],
+                input_data['concave points_se'], input_data['symmetry_se'], input_data['fractal_dimension_se']],
             theta=['Radius', 'Texture', 'Perimeter', 'Area', 'Smoothness', 'Compactness', 'Concavity', 'Concave Points',
                    'Symmetry', 'Fractal Dimension'],
             fill='toself',
@@ -77,8 +76,10 @@ def create_radar_chart(radius_mean, texture_mean, perimeter_mean, area_mean, smo
 
     fig.add_trace(
         go.Scatterpolar(
-            r=[radius_worst, texture_worst, perimeter_worst, area_worst, smoothness_worst, compactness_worst,
-               concavity_worst, concave_points_worst, symmetry_worst, fractal_dimension_worst],
+            r=[input_data['radius_worst'], input_data['texture_worst'], input_data['perimeter_worst'],
+                input_data['area_worst'], input_data['smoothness_worst'], input_data['compactness_worst'],
+                input_data['concavity_worst'], input_data['concave points_worst'], input_data['symmetry_worst'],
+                input_data['fractal_dimension_worst']],
             theta=['Radius', 'Texture', 'Perimeter', 'Area', 'Smoothness', 'Compactness', 'Concavity', 'Concave Points',
                    'Symmetry', 'Fractal Dimension'],
             fill='toself',
@@ -90,7 +91,7 @@ def create_radar_chart(radius_mean, texture_mean, perimeter_mean, area_mean, smo
         polar=dict(
             radialaxis=dict(
                 visible=True,
-                range=[0, 60]
+                range=[0, 1]
             )
         ),
         showlegend=True,
@@ -259,78 +260,63 @@ def create_input_form(data):
     return input_data
 
 
+def get_input_data_scaled(input_data):
+    # scale the input
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    input_data_scaled = scaler.fit_transform(
+        [[input_data['radius_mean'], input_data['texture_mean'], input_data['perimeter_mean'], input_data['area_mean'],
+          input_data['smoothness_mean'], input_data['compactness_mean'], input_data['concavity_mean'],
+          input_data['concave points_mean'], input_data['symmetry_mean'], input_data['fractal_dimension_mean'],
+          input_data['radius_se'], input_data['texture_se'], input_data['perimeter_se'], input_data['area_se'],
+          input_data['smoothness_se'], input_data['compactness_se'], input_data['concavity_se'],
+          input_data['concave points_se'], input_data['symmetry_se'], input_data['fractal_dimension_se'],
+          input_data['radius_worst'], input_data['texture_worst'], input_data['perimeter_worst'],
+          input_data['area_worst'], input_data['smoothness_worst'], input_data['compactness_worst'],
+          input_data['concavity_worst'], input_data['concave points_worst'], input_data['symmetry_worst'],
+          input_data['fractal_dimension_worst']]]
+    )
+
+    return input_data_scaled
+
+
+def get_scaled_values_dict(values_dict):
+    # Define a Function to Scale the Values based on the Min and Max of the Predictor in the Training Data
+    data = get_clean_data()
+    X = data.drop(['diagnosis'], axis=1)
+
+    scaled_dict = {}
+
+    for key, value in values_dict.items():
+        max_val = X[key].max()
+        min_val = X[key].min()
+        scaled_value = (value - min_val) / (max_val - min_val)
+        scaled_dict[key] = scaled_value
+
+    return scaled_dict
+
+
 def create_app(data):
     import streamlit as st
 
     # load the model
     model = get_model()
 
-    # create the app
     st.set_page_config(page_title="Breast Cancer Diagnosis", page_icon=":female-doctor:", layout="wide", initial_sidebar_state="expanded")
     st.title("Breast Cancer Diagnosis")
-    # create the input form
+
     input_data = create_input_form(data)
 
+    input_data_scaled = get_input_data_scaled(input_data)
 
-    radius = input_data['radius_mean']
-    texture = input_data['texture_mean']
-    perimeter = input_data['perimeter_mean']
-    area = input_data['area_mean']
-    smoothness = input_data['smoothness_mean']
-    compactness = input_data['compactness_mean']
-    concavity = input_data['concavity_mean']
-    concave_points = input_data['concave points_mean']
-    symmetry = input_data['symmetry_mean']
-    fractal_dimension = input_data['fractal_dimension_mean']
+    input_data_chart = get_scaled_values_dict(input_data)
 
-    radius_se = input_data['radius_se']
-    texture_se = input_data['texture_se']
-    perimeter_se = input_data['perimeter_se']
-    area_se = input_data['area_se']
-    smoothness_se = input_data['smoothness_se']
-    compactness_se = input_data['compactness_se']
-    concavity_se = input_data['concavity_se']
-    concave_points_se = input_data['concave points_se']
-    symmetry_se = input_data['symmetry_se']
-    fractal_dimension_se = input_data['fractal_dimension_se']
-
-    radius_worst = input_data['radius_worst']
-    texture_worst = input_data['texture_worst']
-    perimeter_worst = input_data['perimeter_worst']
-    area_worst = input_data['area_worst']
-    smoothness_worst = input_data['smoothness_worst']
-    compactness_worst = input_data['compactness_worst']
-    concavity_worst = input_data['concavity_worst']
-    concave_points_worst = input_data['concave points_worst']
-    symmetry_worst = input_data['symmetry_worst']
-    fractal_dimension_worst = input_data['fractal_dimension_worst']
-
-
-    # scale the input
-    from sklearn.preprocessing import StandardScaler
-    scaler = StandardScaler()
-    input_data = scaler.fit_transform(
-        [[radius, texture, perimeter, area, smoothness, compactness, concavity, concave_points,
-            symmetry, fractal_dimension, radius_se, texture_se, perimeter_se, area_se, smoothness_se,
-            compactness_se, concavity_se, concave_points_se, symmetry_se, fractal_dimension_se, radius_worst,
-            texture_worst, perimeter_worst, area_worst, smoothness_worst, compactness_worst, concavity_worst,
-            concave_points_worst, symmetry_worst, fractal_dimension_worst]]
-        )
-
-    # Use the model to make a prediction
-    prediction = model.predict(input_data)
+    prediction = model.predict(input_data_scaled)
 
     col1, col2 = st.columns([4,1])
 
     with col1:
-        #st.write("Radar chart of the input data")
-        radar_chart = create_radar_chart(
-            radius, texture, perimeter, area, smoothness, compactness, concavity, concave_points,
-            symmetry, fractal_dimension, radius_se, texture_se, perimeter_se, area_se, smoothness_se,
-            compactness_se, concavity_se, concave_points_se, symmetry_se, fractal_dimension_se, radius_worst,
-            texture_worst, perimeter_worst, area_worst, smoothness_worst, compactness_worst, concavity_worst,
-            concave_points_worst, symmetry_worst, fractal_dimension_worst
-            )
+        radar_chart = create_radar_chart(input_data_chart)
         st.plotly_chart(radar_chart, use_container_width=True)
 
     with col2:
@@ -345,14 +331,13 @@ def create_app(data):
         else:
             st.write("Malignant")
 
-        st.write("Probability of being benign: ", model.predict_proba(input_data)[0][0])
-        st.write("Probability of being malignant: ", model.predict_proba(input_data)[0][1])
+        st.write("Probability of being benign: ", model.predict_proba(input_data_scaled)[0][0])
+        st.write("Probability of being malignant: ", model.predict_proba(input_data_scaled)[0][1])
 
 
 def main():
     # EDA
-    # df = pd.read_csv('./data/cancer-diagnosis.csv')
-    # df = clean_data(df)
+    # df = get_clean_data()
     # plot_data(df)
 
     # MODEL
@@ -360,8 +345,7 @@ def main():
     # print("Model: ", model)
 
     # APP
-    data = pd.read_csv('./data/cancer-diagnosis.csv')
-    data = clean_data(data)
+    data = get_clean_data()
     create_app(data)
 
 
