@@ -95,9 +95,7 @@ def create_radar_chart(input_data):
             )
         ),
         showlegend=True,
-        autosize=False,
-        width=400,
-        height=700,
+        autosize=True
     )
 
     return fig
@@ -299,11 +297,18 @@ def get_scaled_values_dict(values_dict):
 def create_app(data):
     import streamlit as st
 
+    # load css
+
     # load the model
     model = get_model()
 
     st.set_page_config(page_title="Breast Cancer Diagnosis", page_icon=":female-doctor:", layout="wide", initial_sidebar_state="expanded")
-    st.title("Breast Cancer Diagnosis")
+    with open("./assets/style.css") as f:
+        st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
+
+    with st.container():
+        st.title("Breast Cancer Diagnosis")
+        st.write("Please connect this app to your cytology lab to help diagnose breast cancer form your tissue sample.")
 
     input_data = create_input_form(data)
 
@@ -313,23 +318,23 @@ def create_app(data):
 
     prediction = model.predict(input_data_scaled)
 
-    col1, col2 = st.columns([4,1])
+    col1, col2 = st.columns([4, 1])
 
     with col1:
         radar_chart = create_radar_chart(input_data_chart)
         st.plotly_chart(radar_chart, use_container_width=True)
 
     with col2:
-        st.subheader('This app predicts if a cell cluster is benign or malignant')
+        st.subheader('Cell cluster prediction')
 
         st.write(
             "Enter the details of the cell nuclei in a digital image of a fine needle aspirate (FNA) of a breast mass to predict whether it is malignant or benign."
             )
         st.write("The cell cluster is: ")
         if prediction[0] == 0:
-            st.write("Benign")
+            st.write("<span class='diagnosis bright-green'>Benign</span>", unsafe_allow_html=True)
         else:
-            st.write("Malignant")
+            st.write("<span class='diagnosis bright-red'>Malignant</span>", unsafe_allow_html=True)
 
         st.write("Probability of being benign: ", model.predict_proba(input_data_scaled)[0][0])
         st.write("Probability of being malignant: ", model.predict_proba(input_data_scaled)[0][1])
