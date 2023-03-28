@@ -187,7 +187,7 @@ def display_predictions(input_data, model, scaler):
     st.write("This app can assist medical professionals in making a diagnosis, but should not be used as a substitute for a professional diagnosis.")
 
 
-def create_app(data):
+def create_app():
     import streamlit as st
 
     st.set_page_config(page_title="Breast Cancer Diagnosis",
@@ -202,6 +202,7 @@ def create_app(data):
         st.title("Breast Cancer Diagnosis")
         st.write("Please connect this app to your cytology lab to help diagnose breast cancer form your tissue sample. This app predicts using a machine learning model whether a breast mass is benign or malignant based on the measurements it receives from your cytosis lab. You can also update the measurements by hand using the sliders in the sidebar. ")
 
+    data = get_clean_data()
     input_data = create_input_form(data)
 
     col1, col2 = st.columns([4, 1])
@@ -227,8 +228,7 @@ def main():
     # print("Model: ", model)
 
     # APP
-    data = get_clean_data()
-    create_app(data)
+    create_app()
 
 
 # Press the green button in the gutter to run the script.
