@@ -297,23 +297,22 @@ def get_scaled_values_dict(values_dict):
 def create_app(data):
     import streamlit as st
 
-    # load css
-
     # load the model
     model = get_model()
 
     st.set_page_config(page_title="Breast Cancer Diagnosis", page_icon=":female-doctor:", layout="wide", initial_sidebar_state="expanded")
+
+    # load css
     with open("./assets/style.css") as f:
         st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
 
     with st.container():
         st.title("Breast Cancer Diagnosis")
-        st.write("Please connect this app to your cytology lab to help diagnose breast cancer form your tissue sample.")
+        st.write("Please connect this app to your cytology lab to help diagnose breast cancer form your tissue sample. This app predicts using a machine learning model whether a breast mass is benign or malignant based on the measurements it receives from your cytosis lab. You can also update the measurements by hand using the sliders in the sidebar. ")
 
     input_data = create_input_form(data)
 
     input_data_scaled = get_input_data_scaled(input_data)
-
     input_data_chart = get_scaled_values_dict(input_data)
 
     prediction = model.predict(input_data_scaled)
@@ -327,9 +326,6 @@ def create_app(data):
     with col2:
         st.subheader('Cell cluster prediction')
 
-        st.write(
-            "Enter the details of the cell nuclei in a digital image of a fine needle aspirate (FNA) of a breast mass to predict whether it is malignant or benign."
-            )
         st.write("The cell cluster is: ")
         if prediction[0] == 0:
             st.write("<span class='diagnosis bright-green'>Benign</span>", unsafe_allow_html=True)
@@ -339,6 +335,9 @@ def create_app(data):
         st.write("Probability of being benign: ", model.predict_proba(input_data_scaled)[0][0])
         st.write("Probability of being malignant: ", model.predict_proba(input_data_scaled)[0][1])
 
+        st.write(
+            "This app can assist medical professionals in making a diagnosis, but should not be used as a substitute for a professional diagnosis."
+            )
 
 def main():
     # EDA
@@ -357,5 +356,3 @@ def main():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
