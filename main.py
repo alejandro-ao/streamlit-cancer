@@ -10,7 +10,8 @@ def get_clean_data():
 
 
 def plot_data(df):
-    plot = df['diagnosis'].value_counts().plot(kind='bar', title="Class distributions \n(0: Benign | 1: Malignant)")
+    plot = df['diagnosis'].value_counts().plot(
+        kind='bar', title="Class distributions \n(0: Benign | 1: Malignant)")
     plot.set_xlabel("Diagnosis")
     plot.set_ylabel("Frequency")
     plt.show()
@@ -30,7 +31,8 @@ def get_model():
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42)
 
     # train the model
     model = LogisticRegression()
@@ -40,7 +42,7 @@ def get_model():
     y_pred = model.predict(X_test)
     print("Accuracy: ", accuracy_score(y_test, y_pred))
     print("Classification report: \n", classification_report(y_test, y_pred))
-    return model
+    return model, scaler
 
 
 def create_radar_chart(input_data):
@@ -107,48 +109,40 @@ def create_input_form(data):
     st.sidebar.header("Cell Nuclei Details")
     slider_labels = [("Radius (mean)", "radius_mean"), ("Texture (mean)", "texture_mean"),
                      ("Perimeter (mean)", "perimeter_mean"), ("Area (mean)", "area_mean"),
-                     ("Smoothness (mean)", "smoothness_mean"), ("Compactness (mean)", "compactness_mean"),
-                     ("Concavity (mean)", "concavity_mean"), ("Concave points (mean)", "concave points_mean"),
-                     ("Symmetry (mean)", "symmetry_mean"), ("Fractal dimension (mean)", "fractal_dimension_mean"),
-                     ("Radius (se)", "radius_se"), ("Texture (se)", "texture_se"), ("Perimeter (se)", "perimeter_se"),
+                     ("Smoothness (mean)",
+                      "smoothness_mean"), ("Compactness (mean)", "compactness_mean"),
+                     ("Concavity (mean)", "concavity_mean"), ("Concave points (mean)",
+                                                              "concave points_mean"),
+                     ("Symmetry (mean)", "symmetry_mean"), ("Fractal dimension (mean)",
+                                                            "fractal_dimension_mean"),
+                     ("Radius (se)", "radius_se"), ("Texture (se)",
+                                                    "texture_se"), ("Perimeter (se)", "perimeter_se"),
                      ("Area (se)", "area_se"), ("Smoothness (se)", "smoothness_se"),
-                     ("Compactness (se)", "compactness_se"), ("Concavity (se)", "concavity_se"),
-                     ("Concave points (se)", "concave points_se"), ("Symmetry (se)", "symmetry_se"),
-                     ("Fractal dimension (se)", "fractal_dimension_se"), ("Radius (worst)", "radius_worst"),
-                     ("Texture (worst)", "texture_worst"), ("Perimeter (worst)", "perimeter_worst"),
-                     ("Area (worst)", "area_worst"), ("Smoothness (worst)", "smoothness_worst"),
-                     ("Compactness (worst)", "compactness_worst"), ("Concavity (worst)", "concavity_worst"),
-                     ("Concave points (worst)", "concave points_worst"), ("Symmetry (worst)", "symmetry_worst"),
+                     ("Compactness (se)",
+                      "compactness_se"), ("Concavity (se)", "concavity_se"),
+                     ("Concave points (se)",
+                      "concave points_se"), ("Symmetry (se)", "symmetry_se"),
+                     ("Fractal dimension (se)",
+                      "fractal_dimension_se"), ("Radius (worst)", "radius_worst"),
+                     ("Texture (worst)", "texture_worst"), ("Perimeter (worst)",
+                                                            "perimeter_worst"),
+                     ("Area (worst)", "area_worst"), ("Smoothness (worst)",
+                                                      "smoothness_worst"),
+                     ("Compactness (worst)",
+                      "compactness_worst"), ("Concavity (worst)", "concavity_worst"),
+                     ("Concave points (worst)",
+                      "concave points_worst"), ("Symmetry (worst)", "symmetry_worst"),
                      ("Fractal dimension (worst)", "fractal_dimension_worst")]
 
     input_data = {}
 
     for label, col in slider_labels:
         input_data[col] = st.sidebar.slider(
-            label, float(data[col].min()), float(data[col].max()), float(data[col].mean())
-            )
+            label, float(data[col].min()), float(
+                data[col].max()), float(data[col].mean())
+        )
 
     return input_data
-
-
-def get_input_data_scaled(input_data):
-    # scale the input
-    from sklearn.preprocessing import StandardScaler
-    scaler = StandardScaler()
-    input_data_scaled = scaler.fit_transform(
-        [[input_data['radius_mean'], input_data['texture_mean'], input_data['perimeter_mean'], input_data['area_mean'],
-          input_data['smoothness_mean'], input_data['compactness_mean'], input_data['concavity_mean'],
-          input_data['concave points_mean'], input_data['symmetry_mean'], input_data['fractal_dimension_mean'],
-          input_data['radius_se'], input_data['texture_se'], input_data['perimeter_se'], input_data['area_se'],
-          input_data['smoothness_se'], input_data['compactness_se'], input_data['concavity_se'],
-          input_data['concave points_se'], input_data['symmetry_se'], input_data['fractal_dimension_se'],
-          input_data['radius_worst'], input_data['texture_worst'], input_data['perimeter_worst'],
-          input_data['area_worst'], input_data['smoothness_worst'], input_data['compactness_worst'],
-          input_data['concavity_worst'], input_data['concave points_worst'], input_data['symmetry_worst'],
-          input_data['fractal_dimension_worst']]]
-    )
-
-    return input_data_scaled
 
 
 def get_scaled_values_dict(values_dict):
@@ -167,17 +161,42 @@ def get_scaled_values_dict(values_dict):
     return scaled_dict
 
 
+def display_predictions(input_data, model, scaler):
+    import streamlit as st
+
+    import numpy as np
+    input_array = np.array(list(input_data.values())).reshape(1, -1)
+    input_data_scaled = scaler.transform(input_array)
+
+    st.subheader('Cell cluster prediction')
+    st.write("The cell cluster is: ")
+
+    prediction = model.predict(input_data_scaled)
+    if prediction[0] == 0:
+        st.write("<span class='diagnosis bright-green'>Benign</span>",
+                 unsafe_allow_html=True)
+    else:
+        st.write("<span class='diagnosis bright-red'>Malignant</span>",
+                 unsafe_allow_html=True)
+
+    st.write("Probability of being benign: ",
+             model.predict_proba(input_data_scaled)[0][0])
+    st.write("Probability of being malignant: ",
+             model.predict_proba(input_data_scaled)[0][1])
+
+    st.write("This app can assist medical professionals in making a diagnosis, but should not be used as a substitute for a professional diagnosis.")
+
+
 def create_app(data):
     import streamlit as st
 
-    # load the model
-    model = get_model()
-
-    st.set_page_config(page_title="Breast Cancer Diagnosis", page_icon=":female-doctor:", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(page_title="Breast Cancer Diagnosis",
+                       page_icon=":female-doctor:", layout="wide", initial_sidebar_state="expanded")
 
     # load css
     with open("./assets/style.css") as f:
-        st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
+        st.markdown('<style>{}</style>'.format(f.read()),
+                    unsafe_allow_html=True)
 
     with st.container():
         st.title("Breast Cancer Diagnosis")
@@ -185,32 +204,17 @@ def create_app(data):
 
     input_data = create_input_form(data)
 
-    input_data_scaled = get_input_data_scaled(input_data)
-    input_data_chart = get_scaled_values_dict(input_data)
-
-    prediction = model.predict(input_data_scaled)
-
     col1, col2 = st.columns([4, 1])
 
     with col1:
+        input_data_chart = get_scaled_values_dict(input_data)
         radar_chart = create_radar_chart(input_data_chart)
         st.plotly_chart(radar_chart, use_container_width=True)
 
     with col2:
-        st.subheader('Cell cluster prediction')
-
-        st.write("The cell cluster is: ")
-        if prediction[0] == 0:
-            st.write("<span class='diagnosis bright-green'>Benign</span>", unsafe_allow_html=True)
-        else:
-            st.write("<span class='diagnosis bright-red'>Malignant</span>", unsafe_allow_html=True)
-
-        st.write("Probability of being benign: ", model.predict_proba(input_data_scaled)[0][0])
-        st.write("Probability of being malignant: ", model.predict_proba(input_data_scaled)[0][1])
-
-        st.write(
-            "This app can assist medical professionals in making a diagnosis, but should not be used as a substitute for a professional diagnosis."
-            )
+        # load the model
+        model, scaler = get_model()
+        display_predictions(input_data, model, scaler)
 
 
 def main():
