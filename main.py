@@ -1,7 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import streamlit as st
-
 
 def clean_data(df):
     df = df.drop(['Unnamed: 32', 'id'], axis=1)
@@ -42,6 +40,64 @@ def get_model():
     print("Accuracy: ", accuracy_score(y_test, y_pred))
     print("Classification report: \n", classification_report(y_test, y_pred))
     return model
+
+
+def create_radar_chart(radius_mean, texture_mean, perimeter_mean, area_mean, smoothness_mean, compactness_mean,
+                       concavity_mean, concave_points_mean, symmetry_mean, fractal_dimension_mean,
+                       radius_se, texture_se, perimeter_se, area_se, smoothness_se, compactness_se, concavity_se,
+                       concave_points_se, symmetry_se, fractal_dimension_se,
+                       radius_worst, texture_worst, perimeter_worst, area_worst, smoothness_worst, compactness_worst,
+                       concavity_worst, concave_points_worst, symmetry_worst, fractal_dimension_worst):
+
+    import plotly.graph_objects as go
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=[radius_mean, texture_mean, perimeter_mean, area_mean, smoothness_mean, compactness_mean, concavity_mean,
+               concave_points_mean, symmetry_mean, fractal_dimension_mean],
+            theta=['Radius', 'Texture', 'Perimeter', 'Area', 'Smoothness', 'Compactness', 'Concavity', 'Concave Points',
+                   'Symmetry', 'Fractal Dimension'],
+            fill='toself',
+            name='Mean'
+        )
+    )
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=[radius_se, texture_se, perimeter_se, area_se, smoothness_se, compactness_se, concavity_se,
+               concave_points_se, symmetry_se, fractal_dimension_se],
+            theta=['Radius', 'Texture', 'Perimeter', 'Area', 'Smoothness', 'Compactness', 'Concavity', 'Concave Points',
+                   'Symmetry', 'Fractal Dimension'],
+            fill='toself',
+            name='Standard Error'
+        )
+    )
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=[radius_worst, texture_worst, perimeter_worst, area_worst, smoothness_worst, compactness_worst,
+               concavity_worst, concave_points_worst, symmetry_worst, fractal_dimension_worst],
+            theta=['Radius', 'Texture', 'Perimeter', 'Area', 'Smoothness', 'Compactness', 'Concavity', 'Concave Points',
+                   'Symmetry', 'Fractal Dimension'],
+            fill='toself',
+            name='Worst'
+        )
+    )
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 60]
+            )
+        ),
+        showlegend=True
+    )
+
+    return fig
+
 
 
 def create_app(data):
@@ -190,6 +246,18 @@ def create_app(data):
     else:
         st.write("The cell cluster is malignant")
 
+    st.write("Probability of being benign: ", model.predict_proba(input)[0][0])
+    st.write("Probability of being malignant: ", model.predict_proba(input)[0][1])
+
+    st.write("Radar chart of the input data")
+    radar_chart = create_radar_chart(
+        radius, texture, perimeter, area, smoothness, compactness, concavity, concave_points,
+        symmetry, fractal_dimension, radius_se, texture_se, perimeter_se, area_se, smoothness_se,
+        compactness_se, concavity_se, concave_points_se, symmetry_se, fractal_dimension_se, radius_worst,
+        texture_worst, perimeter_worst, area_worst, smoothness_worst, compactness_worst, concavity_worst,
+        concave_points_worst, symmetry_worst, fractal_dimension_worst
+        )
+    st.plotly_chart(radar_chart)
 
 def main():
     # EDA
