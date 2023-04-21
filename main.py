@@ -48,6 +48,8 @@ def get_model():
 def create_radar_chart(input_data):
 
     import plotly.graph_objects as go
+    
+    input_data = get_scaled_values_dict(input_data)
 
     fig = go.Figure()
 
@@ -205,16 +207,15 @@ def create_app():
     data = get_clean_data()
     input_data = create_input_form(data)
 
+    model, scaler = get_model()
     col1, col2 = st.columns([4, 1])
 
     with col1:
-        input_data_chart = get_scaled_values_dict(input_data)
-        radar_chart = create_radar_chart(input_data_chart)
+        radar_chart = create_radar_chart(input_data)
         st.plotly_chart(radar_chart, use_container_width=True)
 
     with col2:
         # load the model
-        model, scaler = get_model()
         display_predictions(input_data, model, scaler)
 
 
